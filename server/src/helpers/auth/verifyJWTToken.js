@@ -1,4 +1,5 @@
 const { secret } = require("config");
+const jwt = require("jsonwebtoken");
 
 function verifyJWTToken(token) {
   return new Promise((resolve, reject) => {

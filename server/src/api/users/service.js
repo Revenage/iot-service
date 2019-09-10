@@ -1,5 +1,3 @@
-const config = require("config");
-const jwt = require("jsonwebtoken");
 const User = require("./dal");
 const subscribeJWTToken = require("helpers/auth/subscribeJWTToken");
 
