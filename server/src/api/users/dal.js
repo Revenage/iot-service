@@ -4,16 +4,33 @@ const omitSensetive = require("helpers/omitSensetive");
 module.exports = {
   create: async function(data) {
     try {
-      const { dataValues } = await User.create(data);
-      return omitSensetive(dataValues);
+      const userData = await User.create(data);
+      const user = userData.get({ plain: true });
+      return omitSensetive(user);
     } catch (error) {
       throw error;
     }
   },
   getById: async function(id) {
     try {
-      const { dataValues } = await User.findByPk(id);
-      return omitSensetive(dataValues);
+      const userData = await User.findByPk(id);
+      const user = userData.get({ plain: true });
+      return omitSensetive(user);
+    } catch (error) {
+      throw error;
+    }
+  },
+  authenticate: async function(email, password) {
+    try {
+      const userData = await User.findOne({
+        where: { email }
+      });
+      const user = userData.get({ plain: true });
+
+      if (password !== user.password) {
+        throw new Error("Invalid password");
+      }
+      return omitSensetive(user);
     } catch (error) {
       throw error;
     }

@@ -7,7 +7,6 @@ function verifyJWTToken(token) {
       if (err || !decodedToken) {
         return reject(err);
       }
-
       resolve(decodedToken);
     });
   });

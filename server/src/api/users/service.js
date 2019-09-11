@@ -19,6 +19,18 @@ module.exports = {
       throw error;
     }
   },
+  login: async function({ email, password }) {
+    try {
+      const user = await User.authenticate(email, password);
+      const token = subscribeJWTToken(user.id);
+      return {
+        ...user,
+        token
+      };
+    } catch (error) {
+      throw error;
+    }
+  },
   allUsers: async function() {
     try {
       const users = await User.all();

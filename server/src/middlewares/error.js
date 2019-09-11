@@ -5,7 +5,7 @@ function ErrorMiddleware(err, req, res, next) {
 
   switch (err.name) {
     case "UnauthorizedError":
-      return res.status(401).json({ message: "Invalid Token" });
+      return res.status(401).json({ message: `Invalid Token: ${err.message}` });
 
     default:
       const { errors } = err;
