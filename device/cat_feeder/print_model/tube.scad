@@ -1,16 +1,16 @@
     
-module tube(di1 = 46) {
+module tube(di1 = 46, cutModel = false) {
   w = 2;
   di2 = di1 + 4;
 
   do1 = di1 + (w*2);
   do2 = di2 + (w*2);
     
-  l1 = 101.5;
+  l1 = cutModel ? 102.5 : 101.5;
   l2 = 10;
   l3 = 7.5;
     
-  l21 = 44;
+  l21 = cutModel ? 46 : 44;
 
 difference() {
         union(){
@@ -30,6 +30,9 @@ difference() {
                     cylinder(h=l3, r1=do2 /2, r2=do2 / 2, $fn=360);
                 };
         };
+
+
+        if (cutModel == false) {
         
         union(){
             translate([0,0, l2 + l3])
@@ -49,6 +52,8 @@ difference() {
                         translate([0,0, -1])
                             cylinder(h=l3 + 2, r1=di2 /2, r2=di2 / 2, $fn=360);
                     };
+        };
+
         };
 
     }; 

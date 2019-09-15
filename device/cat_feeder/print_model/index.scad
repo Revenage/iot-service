@@ -18,11 +18,11 @@ Auger_flight_length = 119 - 17.5 - 1 - 4; //[10:200]
 module CatFeeder() {
   
     //Backholder
-//   height = 8;
-//   translate([shift + 0.5 + height,0, 0])
-//    rotate([0, -90, 0])
-//        color("blue", 1)
-//        backHolder(height);
+   height = 8;
+   translate([shift + 0.5 + height,0, 0])
+    rotate([0, -90, 0])
+        color("blue", 1)
+        backHolder(height);
   
     // topHolder
   translate([shift - 0.5 - Auger_flight_length,0, 0])
@@ -31,19 +31,24 @@ module CatFeeder() {
       topHolder();
 //  
     //Auger
-//   rotate(a=$t * 360, v=[1,0,0])
-//   translate([shift,0, 0]) 
-//    rotate([0, -90, 0])
-//        AugerFunctional();
+   rotate(a=0 + ($t * 360), v=[1,0,0])
+   translate([shift,0, 0]) 
+    rotate([0, -90, 0])
+        AugerFunctional();
 //        
 //   //Step Driver
-//    translate([shift,0, 0]) 
-//    rotate([0, -90, 0])
-//    color("yellow", 0.3) translate([0,-8, -shift - 5.6])
-//        stepper28BYJ();
-//
+    translate([shift,0, 0]) 
+    rotate([0, -90, 0])
+    color("yellow", 0.3) translate([0,-8, -shift - 5.6])
+        stepper28BYJ();
+
 //    // Tube
-//    color("silver", 0.3) tube(innerDiametr);
+    difference() {
+        color("silver", 0.3) tube(innerDiametr);
+        
+        translate([-Auger_flight_length + 27,-30, -45]) 
+        cube([35, 60, 40]);
+    }
     
 };
     
