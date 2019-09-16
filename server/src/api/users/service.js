@@ -62,5 +62,13 @@ module.exports = {
     } catch (error) {
       throw error;
     }
+  },
+  getByEmail: async function(email) {
+    try {
+      const user = await User.getByEmail(email);
+      return user;
+    } catch (error) {
+      throw error;
+    }
   }
 };

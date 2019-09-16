@@ -38,7 +38,7 @@ module.exports = {
   },
   logout: async function(req, res, next) {
     try {
-      const user = await create(req.body);
+      //const user = await create(req.body);
     } catch (error) {
       next(error);
     }
@@ -46,10 +46,8 @@ module.exports = {
   me: async function(req, res, next) {
     try {
       const { id } = req.user;
-      console.log("id", id);
       if (id) {
         const user = await getById(id);
-        console.log("meuser", user);
         return res.json(user);
       }
     } catch (error) {

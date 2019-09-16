@@ -1,4 +1,4 @@
-const { User } = require("../../db/models");
+const { User, Device } = require("../../db/models");
 const omitSensetive = require("helpers/omitSensetive");
 
 module.exports = {
@@ -13,9 +13,44 @@ module.exports = {
   },
   getById: async function(id) {
     try {
-      const userData = await User.findByPk(id);
-      const user = userData.get({ plain: true });
-      return omitSensetive(user);
+      const userData = await User.findByPk(id, {
+        include: [
+          {
+            model: Device,
+            required: false,
+            as: "devices",
+            attributes: ["uid"],
+            through: { attributes: [] }
+          }
+        ]
+      });
+      if (userData) {
+        const user = userData.get({ plain: true });
+        return omitSensetive(user);
+      }
+      throw `There is not user with id ${id}`;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getByEmail: async function(email) {
+    try {
+      const user = await User.findOne({
+        include: [
+          {
+            model: Device,
+            required: false,
+            as: "devices",
+            attributes: ["uid"],
+            through: { attributes: [] }
+          }
+        ],
+        where: { email }
+      });
+      if (user) {
+        return user;
+      }
+      throw `There is not user with email ${email}`;
     } catch (error) {
       throw error;
     }

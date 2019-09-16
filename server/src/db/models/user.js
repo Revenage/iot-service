@@ -13,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
     {}
   );
   User.associate = function(models) {
+    User.belongsToMany(models.Device, {
+      through: models.UserDevice,
+      as: "devices",
+      foreignKey: "userId"
+    });
     // associations can be defined here
   };
   return User;

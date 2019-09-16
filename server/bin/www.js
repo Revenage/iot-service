@@ -9,7 +9,7 @@ const { port } = require("../src/config");
 app.set("port", port);
 const server = http.createServer(app);
 
-models.sequelize.sync().then(function() {
+models.sequelize.sync({ force: true }).then(function() {
   server.listen(port, function() {
     console.log(`Example app listening on port ${ip.address()}:${port}`);
   });
