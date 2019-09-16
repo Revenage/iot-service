@@ -24,6 +24,7 @@
   "scripts": {
     "start": "NODE_PATH=src NODE_ENV=development nodemon ./bin/www",
     "dev": "NODE_PATH=src NODE_ENV=development node ./bin/www",
-    "prod": "NODE_PATH=src NODE_ENV=production node ./bin/www"
+    "prod": "NODE_PATH=src NODE_ENV=production node ./bin/www",
+    "deploy": "git push heroku master"
   }
 }

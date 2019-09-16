@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { timeout } = require("config");
 
 async function publishAll(data, items) {
   if (items.size) {
@@ -20,7 +21,7 @@ router.get("/connect/:id", (req, res) => {
   const t = setTimeout(() => {
     subscribers.delete(req.params.id);
     res.json({ status: "time out" });
-  }, 30000 - 1000);
+  }, timeout);
 
   subscribers.set(req.params.id, function back(data) {
     clearTimeout(t);
