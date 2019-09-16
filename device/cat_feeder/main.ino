@@ -4,6 +4,8 @@
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
 
+#include "EEPROM.h"
+
 const byte DNS_PORT = 53;
 IPAddress apIP(172, 217, 28, 1);
 DNSServer dnsServer;
@@ -12,14 +14,18 @@ ESP8266WebServer server(80);
 const char *ssid = "CatsFeeder"; //ENTER YOUR WIFI SETTINGS
 const char *password = "12341234";
 
-//boolean LEDstate = LOW;
-//uint8_t LEDpin = 2;
+boolean LEDstate = LOW;
+uint8_t LEDpin = 2;
 
 String wifiSSID = "";
 String wifiPASSWORD = "";
 String wifiMAC = "";
 
-const String host = "http://192.168.0.104:3000";
+void writeString(char add, String data);
+String read_String(char add);
+
+// const String host = "http://192.168.0.102:3000";
+const String host = "http://iot-smart-house.herokuapp.com";
 
 String Page(String title, String content)
 {
@@ -97,12 +103,21 @@ String ConnectionToYouAccount()
   return Page("Connection To You Account", ptr);
 }
 
+String FailConnection()
+{
+  String ptr = "";
+  ptr += "<h1>Fail Connection to WIFI</h1>\n";
+  ptr += "<a href=\"/\">Try another connection</a>";
+  return Page("Fail Connection to WIFI", ptr);
+}
+
 void setup()
 {
   delay(1000);
   Serial.begin(115200);
+  EEPROM.begin(128);
   WiFi.mode(WIFI_OFF);
-  //  pinMode(LEDpin, OUTPUT);
+  pinMode(LEDpin, OUTPUT);
 
   Serial.setDebugOutput(true);
   WiFi.mode(WIFI_AP_STA);
@@ -122,13 +137,12 @@ void setup()
   server.on("/connection", handle_conection);
   server.on("/connect_to_wifi", handle_conection_to_wifi);
   server.on("/connect_to_account", handle_connection_to_account);
-  //  server.on("/ledoff", handle_ledoff);
 
   server.on("/generate_204", handle_root);        //Android captive portal
   server.on("/hotspot-detect.html", handle_root); //Iphone captive portal
   server.onNotFound(handleNotFound);
   server.begin();
-  //  Serial.println(LEDstate ? "HIGH" : "LOW");
+
   Serial.println("HTTP server started");
 }
 
@@ -141,13 +155,12 @@ void handleNotFound()
 
 void handle_root()
 {
-  unsigned int len = wifiSSID.length();
-  if (len == 0)
-  {
-    Serial.print("Page served: ");
-    Serial.println(server.uri());
-    server.send(200, "text/html", ConnectionListWiFiPage());
-  }
+  // unsigned int len = wifiSSID.length();
+  // if (len == 0) {
+  Serial.print("Page served: ");
+  Serial.println(server.uri());
+  server.send(200, "text/html", ConnectionListWiFiPage());
+  // }
 }
 
 void handle_conection()
@@ -177,11 +190,22 @@ void wifi_connection()
 
   Serial.print("Connecting");
   // Wait for connection
+  int count = 10;
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
     Serial.print(".");
+    count--;
+    if (count == 0)
+    {
+      Serial.println("");
+      Serial.print("Fail Connected ");
+      server.send(200, "text/html", FailConnection());
+    }
   }
+
+  blink();
+  blink();
 
   //If connection successful show IP address in serial monitor
   Serial.println("");
@@ -189,6 +213,8 @@ void wifi_connection()
   Serial.println(wifiSSID);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  saveCredentials();
 }
 
 void handle_connection_to_account()
@@ -214,7 +240,7 @@ void handle_connection_to_account()
   Serial.print("postData: ");
   Serial.println(postData);
 
-  http.begin(host + "/connect-device");               //Specify request destination
+  http.begin(host + "/api/devices/" + wifiMAC);       //Specify request destination
   http.addHeader("Content-Type", "application/json"); //Specify content-type header
 
   int httpCode = http.POST(postData); //Send the request
@@ -247,8 +273,169 @@ void handle_connection_to_account()
   }
 }
 
+void writeString(char add, String data)
+{
+  int _size = data.length();
+  int i;
+  for (i = 0; i < _size; i++)
+  {
+    EEPROM.write(add + i, data[i]);
+  }
+  EEPROM.write(add + _size, '\0'); //Add termination null character for String Data
+  EEPROM.commit();
+}
+
+String read_String(char add)
+{
+  int i;
+  char data[100]; //Max 100 Bytes
+  int len = 0;
+  unsigned char k;
+  k = EEPROM.read(add);
+  while (k != '\0' && len < 500) //Read until null character
+  {
+    k = EEPROM.read(add + len);
+    data[len] = k;
+    len++;
+  }
+  data[len] = '\0';
+  return String(data);
+}
+
+/** Store WLAN credentials to EEPROM */
+void saveCredentials()
+{
+  Serial.print("Save Credentials:");
+  Serial.println(wifiSSID);
+  Serial.println(wifiPASSWORD);
+
+  writeString(0, wifiSSID);
+  writeString(32, wifiPASSWORD);
+}
+
+/** Load WLAN credentials from EEPROM */
+String loadSSID()
+{
+  String SSID = read_String(0);
+  Serial.println(wifiSSID);
+  return SSID;
+}
+
+String loadPASSWORD()
+{
+  String PASSWORD = read_String(32);
+  Serial.println(wifiPASSWORD);
+  return PASSWORD;
+}
+
+void ledProcess()
+{
+  if (LEDstate)
+  {
+    digitalWrite(LEDpin, LOW);
+  }
+  else
+  {
+    digitalWrite(LEDpin, HIGH);
+  }
+}
+
+void blink()
+{
+  delay(500);
+  digitalWrite(LEDpin, LOW);
+  delay(500);
+  digitalWrite(LEDpin, HIGH);
+}
+
+void mainProcess()
+{
+
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    Serial.print("main connected: ");
+    Serial.println(host + "/poll/connect/" + wifiMAC);
+    HTTPClient http;
+    http.setTimeout(60000);
+    http.begin(host + "/poll/connect/" + wifiMAC); //Specify request destination
+
+    int httpCode = http.GET(); //Send the request
+
+    Serial.println(httpCode);
+    if (httpCode > 0)
+    { //Check the returning code
+
+      String payload = http.getString(); //Get the request response payload
+      Serial.print("poll payload: ");
+      Serial.println(payload); //Print the response payload
+
+      // PROCESS ACTIONS
+      const int cap = JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(1);
+      StaticJsonDocument<cap> respondDoc;
+
+      DeserializationError err = deserializeJson(respondDoc, payload);
+      if (err)
+      {
+        Serial.print(F("deserializeJson() failed with code "));
+        Serial.println(err.c_str());
+      }
+
+      auto status = respondDoc["status"].as<String>();
+
+      auto led = respondDoc["led"].as<boolean>();
+      LEDstate = led;
+
+      Serial.print("poll status: ");
+      Serial.println(status); //Print the response payload
+    }
+    else
+    {
+      if (httpCode == -1)
+      {
+        delay(1000);
+      }
+    }
+    http.end(); //Close connection
+  }
+  else
+  {
+    String ssid = loadSSID();
+    String password = loadPASSWORD();
+    if (ssid.length() > 0 && password.length() > 0)
+    {
+      WiFi.begin(ssid, password); //Connect to your WiFi router
+      Serial.println("Connecting");
+      int count = 10;
+      while (WiFi.status() != WL_CONNECTED)
+      {
+        delay(500);
+        Serial.print(".");
+        count--;
+        if (count == 0)
+        {
+          Serial.println("");
+          Serial.print("Fail Connected ");
+        }
+      }
+
+      blink();
+      blink();
+      Serial.println("");
+      Serial.print("Connected to ");
+      Serial.println(ssid);
+      Serial.println(password);
+      Serial.print("IP address: ");
+      Serial.println(WiFi.localIP());
+    }
+  }
+}
+
 void loop()
 {
   dnsServer.processNextRequest();
   server.handleClient();
+
+  mainProcess();
+
+  ledProcess();
 }

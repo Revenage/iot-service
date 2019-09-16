@@ -19,8 +19,8 @@ router.get("/connect/:id", (req, res) => {
   console.log("poll for: ", req.params.id);
   const t = setTimeout(() => {
     subscribers.delete(req.params.id);
-    res.json({ status: "ok" });
-  }, 30000);
+    res.json({ status: "time out" });
+  }, 30000 - 1000);
 
   subscribers.set(req.params.id, function back(data) {
     clearTimeout(t);
