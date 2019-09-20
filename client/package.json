@@ -3,7 +3,18 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "parcel ./src/index.html",
+    "prod": "rm -rf dist && parcel build ./src/index.html --no-cache --experimental-scope-hoisting"
+  },
+  "devDependencies": {
+    "elm-hot": "^1.1.2",
+    "node-elm-compiler": "^5.0.4",
+    "parcel-plugin-static-files-copy": "^2.2.1",
+    "sass": "^1.22.12"
+  },
   "dependencies": {
-    "axios": "^0.19.0"
+    "elm": "^0.19.0-no-deps",
+    "elm-format": "^0.8.2"
   }
 }

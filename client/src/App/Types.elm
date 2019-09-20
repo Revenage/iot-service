@@ -1,0 +1,32 @@
+module Types exposing (..)
+
+import Browser
+import Browser.Navigation as Nav
+import Dict exposing (Dict)
+import Html exposing (Html)
+
+type alias Me = { id : Int, username : String, email : String }
+
+type alias InitialData = { token: String, config: Config }
+
+type alias Config = { host: String }
+
+type TranslateStatus
+    = TranslateFailure
+    | TranslateLoading
+    | TranslateSuccess Translation
+
+
+type Language
+    = English
+    | Russian
+    | Ukrainian
+
+
+type alias Translation =
+    Dict String String
+
+type Session
+    = LoggedIn
+    | Unauthorised
+

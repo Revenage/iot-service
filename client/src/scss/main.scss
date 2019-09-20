@@ -1,0 +1,32 @@
+@import "variables";
+
+* {
+  font-family: "Raleway", sans-serif;
+}
+
+body {
+  color: $mainColor;
+  background-color: $mainBg;
+
+  header {
+    background: red;
+  }
+
+  main {
+    padding: 10px;
+  }
+
+  footer {
+    bottom: 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    color: $lightColo;
+    background-color: $lightBg;
+  }
+}

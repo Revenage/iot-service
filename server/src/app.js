@@ -9,9 +9,9 @@ const ApiRoutes = require("api");
 const PollRoutes = require("poll");
 const JWTMiddleware = require("middlewares/jwt");
 
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors());
 
 app.use(HttpLoggerMiddleware);
 

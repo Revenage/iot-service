@@ -9,13 +9,16 @@ const { port } = require("../src/config");
 app.set("port", port);
 const server = http.createServer(app);
 
-models.sequelize.sync({ force: true }).then(function() {
-  server.listen(port, function() {
-    console.log(`Example app listening on port ${ip.address()}:${port}`);
+models.sequelize
+  // .sync({ force: true })
+  .sync()
+  .then(function() {
+    server.listen(port, function() {
+      console.log(`Example app listening on port ${ip.address()}:${port}`);
+    });
+    server.on("error", onError);
+    server.on("listening", onListening);
   });
-  server.on("error", onError);
-  server.on("listening", onListening);
-});
 
 /**
  * Event listener for HTTP server "error" event.

@@ -1,0 +1,29 @@
+* {
+  font-family: "Raleway", sans-serif;
+}
+
+body {
+  color: #c4c4c5;
+  background-color: #272c35;
+}
+body header {
+  background: red;
+}
+body main {
+  padding: 10px;
+}
+body footer {
+  bottom: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    color: #cccccc;
+    background-color: white;
+  }
+}
+
+/*# sourceMappingURL=/main.77bb5cfd.css.map */
