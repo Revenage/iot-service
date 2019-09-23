@@ -18,6 +18,8 @@ import Types exposing (..)
 type Route
     = Guest
     | Dashboard
+    | Login
+    | SignUp
     | NotFound
 
 
@@ -26,6 +28,8 @@ route =
     oneOf
         [ map Dashboard top
         , map Guest top
+        , map Login (s "login")
+        , map SignUp (s "signup")
         , map NotFound (s "404")
         ]
 
@@ -46,4 +50,3 @@ toPublicRoute oldRoute =
             Guest
         _ ->
             oldRoute
-            

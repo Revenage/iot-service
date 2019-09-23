@@ -6717,6 +6717,8 @@ var author$project$Main$getTranslation = function (lang) {
 var author$project$Router$NotFound = {$: 'NotFound'};
 var author$project$Router$Dashboard = {$: 'Dashboard'};
 var author$project$Router$Guest = {$: 'Guest'};
+var author$project$Router$Login = {$: 'Login'};
+var author$project$Router$SignUp = {$: 'SignUp'};
 var elm$url$Url$Parser$Parser = function (a) {
 	return {$: 'Parser', a: a};
 };
@@ -6820,6 +6822,14 @@ var author$project$Router$route = elm$url$Url$Parser$oneOf(
 		[
 			A2(elm$url$Url$Parser$map, author$project$Router$Dashboard, elm$url$Url$Parser$top),
 			A2(elm$url$Url$Parser$map, author$project$Router$Guest, elm$url$Url$Parser$top),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Router$Login,
+			elm$url$Url$Parser$s('login')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Router$SignUp,
+			elm$url$Url$Parser$s('signup')),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Router$NotFound,
@@ -6976,9 +6986,23 @@ var author$project$Types$Unauthorised = {$: 'Unauthorised'};
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var author$project$Main$init = F3(
 	function (initialData, url, key) {
+		var translation = author$project$Types$TranslateLoading;
 		var route = author$project$Router$toRoute(url);
 		return _Utils_Tuple2(
-			{key: key, language: author$project$Types$English, route: route, session: author$project$Types$Unauthorised, translation: author$project$Types$TranslateLoading, url: url},
+			{
+				key: key,
+				language: author$project$Types$English,
+				login: {
+					form: {email: '', password: ''},
+					host: initialData.config.host,
+					key: key,
+					translation: translation
+				},
+				route: route,
+				session: author$project$Types$Unauthorised,
+				translation: translation,
+				url: url
+			},
 			elm$core$Platform$Cmd$batch(
 				_List_fromArray(
 					[
@@ -6992,21 +7016,60 @@ var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var author$project$Main$subscriptions = function (_n0) {
 	return elm$core$Platform$Sub$none;
 };
-var author$project$Router$toPublicRoute = function (oldRoute) {
-	if (oldRoute.$ === 'Dashboard') {
-		return author$project$Router$Guest;
-	} else {
-		return oldRoute;
-	}
+var author$project$Main$MsgLogin = function (a) {
+	return {$: 'MsgLogin', a: a};
 };
-var author$project$Types$LoggedIn = {$: 'LoggedIn'};
-var author$project$Types$TranslateFailure = {$: 'TranslateFailure'};
-var author$project$Types$TranslateSuccess = function (a) {
-	return {$: 'TranslateSuccess', a: a};
+var author$project$Types$UserData = F4(
+	function (id, username, email, token) {
+		return {email: email, id: id, token: token, username: username};
+	});
+var elm$json$Json$Decode$map4 = _Json_map4;
+var author$project$Decoders$decodeLoginResponse = A5(
+	elm$json$Json$Decode$map4,
+	author$project$Types$UserData,
+	A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
+	A2(elm$json$Json$Decode$field, 'username', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'token', elm$json$Json$Decode$string));
+var author$project$Pages$Login$HandleLoginResponse = function (a) {
+	return {$: 'HandleLoginResponse', a: a};
 };
-var elm$core$Basics$negate = function (n) {
-	return -n;
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
 };
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Pages$Login$encodeLogin = function (form) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'email',
+				elm$json$Json$Encode$string(form.email)),
+				_Utils_Tuple2(
+				'password',
+				elm$json$Json$Encode$string(form.password))
+			]));
+};
+var author$project$Pages$Login$encodeToken = function (token) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'token',
+				elm$json$Json$Encode$string(token))
+			]));
+};
+var author$project$Pages$Login$localStorage = _Platform_outgoingPort('localStorage', elm$core$Basics$identity);
 var elm$browser$Browser$External = function (a) {
 	return {$: 'External', a: a};
 };
@@ -7173,7 +7236,6 @@ var elm$browser$Debugger$Overlay$viewProblemType = function (_n0) {
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$p = _VirtualDom_node('p');
 var elm$html$Html$ul = _VirtualDom_node('ul');
-var elm$json$Json$Encode$string = _Json_wrap;
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7807,6 +7869,9 @@ var elm$core$String$left = F2(
 	function (n, string) {
 		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
 	});
+var elm$core$Basics$negate = function (n) {
+	return -n;
+};
 var elm$core$String$right = F2(
 	function (n, string) {
 		return (n < 1) ? '' : A3(
@@ -9710,19 +9775,6 @@ var elm$browser$Debugger$History$encode = function (_n0) {
 			elm$core$List$reverse(recent.messages),
 			snapshots));
 };
-var elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, obj) {
-					var k = _n0.a;
-					var v = _n0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
 var elm$browser$Debugger$Metadata$encodeAlias = function (_n0) {
 	var args = _n0.args;
 	var tipe = _n0.tipe;
@@ -10550,6 +10602,99 @@ var elm$url$Url$fromString = function (str) {
 		elm$url$Url$Https,
 		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
 };
+var elm$browser$Browser$Navigation$replaceUrl = _Browser_replaceUrl;
+var elm$core$Debug$log = _Debug_log;
+var elm$http$Http$jsonBody = function (value) {
+	return A2(
+		_Http_pair,
+		'application/json',
+		A2(elm$json$Json$Encode$encode, 0, value));
+};
+var elm$http$Http$post = function (r) {
+	return elm$http$Http$request(
+		{body: r.body, expect: r.expect, headers: _List_Nil, method: 'POST', timeout: elm$core$Maybe$Nothing, tracker: elm$core$Maybe$Nothing, url: r.url});
+};
+var author$project$Pages$Login$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'SubmittedForm':
+				var adsf = A2(elm$core$Debug$log, 'form', model.form);
+				return _Utils_Tuple2(
+					model,
+					elm$http$Http$post(
+						{
+							body: elm$http$Http$jsonBody(
+								author$project$Pages$Login$encodeLogin(model.form)),
+							expect: A2(elm$http$Http$expectJson, author$project$Pages$Login$HandleLoginResponse, author$project$Decoders$decodeLoginResponse),
+							url: A3(
+								elm$url$Url$Builder$crossOrigin,
+								model.host,
+								_List_fromArray(
+									['api', 'users', 'auth', 'login']),
+								_List_Nil)
+						}));
+			case 'EnteredEmail':
+				var email = msg.a;
+				var oldForm = model.form;
+				var newForm = _Utils_update(
+					oldForm,
+					{email: email});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{form: newForm}),
+					elm$core$Platform$Cmd$none);
+			case 'EnteredPassword':
+				var password = msg.a;
+				var oldForm = model.form;
+				var newForm = _Utils_update(
+					oldForm,
+					{password: password});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{form: newForm}),
+					elm$core$Platform$Cmd$none);
+			case 'HandleLoginResponse':
+				var respond = msg.a;
+				if (respond.$ === 'Ok') {
+					var userdata = respond.a;
+					var emptyForm = {email: '', password: ''};
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{form: emptyForm}),
+						elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[
+									author$project$Pages$Login$localStorage(
+									author$project$Pages$Login$encodeToken(userdata.token)),
+									A2(elm$browser$Browser$Navigation$replaceUrl, model.key, '/')
+								])));
+				} else {
+					var emptyForm = {email: '', password: ''};
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{form: emptyForm}),
+						elm$core$Platform$Cmd$none);
+				}
+			default:
+				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+		}
+	});
+var author$project$Router$toPublicRoute = function (oldRoute) {
+	if (oldRoute.$ === 'Dashboard') {
+		return author$project$Router$Guest;
+	} else {
+		return oldRoute;
+	}
+};
+var author$project$Types$LoggedIn = {$: 'LoggedIn'};
+var author$project$Types$TranslateFailure = {$: 'TranslateFailure'};
+var author$project$Types$TranslateSuccess = function (a) {
+	return {$: 'TranslateSuccess', a: a};
+};
 var elm$browser$Browser$Navigation$back = F2(
 	function (key, n) {
 		return A2(_Browser_go, key, -n);
@@ -10609,6 +10754,18 @@ var author$project$Main$update = F2(
 				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 			case 'MsgDashboard':
 				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+			case 'MsgLogin':
+				var subN = msg.a;
+				var _n1 = A2(author$project$Pages$Login$update, subN, model.login);
+				var newLoginModel = _n1.a;
+				var loginCmd = _n1.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{login: newLoginModel}),
+					A2(elm$core$Platform$Cmd$map, author$project$Main$MsgLogin, loginCmd));
+			case 'MsgSignUp':
+				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 			case 'LinkClicked':
 				var urlRequest = msg.a;
 				if (urlRequest.$ === 'Internal') {
@@ -10637,10 +10794,16 @@ var author$project$Main$update = F2(
 				var result = msg.a;
 				if (result.$ === 'Ok') {
 					var translation = result.a;
+					var loginModel = model.login;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
+								login: _Utils_update(
+									loginModel,
+									{
+										translation: author$project$Types$TranslateSuccess(translation)
+									}),
 								translation: author$project$Types$TranslateSuccess(translation)
 							}),
 						elm$core$Platform$Cmd$none);
@@ -10693,6 +10856,9 @@ var author$project$Main$MsgGuest = function (a) {
 };
 var author$project$Main$MsgNotFound = function (a) {
 	return {$: 'MsgNotFound', a: a};
+};
+var author$project$Main$MsgSignUp = function (a) {
+	return {$: 'MsgSignUp', a: a};
 };
 var author$project$Services$I18n$get = F2(
 	function (status, key) {
@@ -10985,6 +11151,246 @@ var author$project$Pages$Guest$view = function (model) {
 		title: trans('GUEST.TITLE')
 	};
 };
+var author$project$Pages$Login$EnteredEmail = function (a) {
+	return {$: 'EnteredEmail', a: a};
+};
+var author$project$Pages$Login$EnteredPassword = function (a) {
+	return {$: 'EnteredPassword', a: a};
+};
+var author$project$Pages$Login$SubmittedForm = {$: 'SubmittedForm'};
+var elm$html$Html$form = _VirtualDom_node('form');
+var elm$html$Html$img = _VirtualDom_node('img');
+var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$label = _VirtualDom_node('label');
+var elm$html$Html$Attributes$action = function (uri) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'action',
+		_VirtualDom_noJavaScriptUri(uri));
+};
+var elm$html$Html$Attributes$alt = elm$html$Html$Attributes$stringProperty('alt');
+var elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var elm$html$Html$Attributes$attribute = elm$virtual_dom$VirtualDom$attribute;
+var elm$html$Html$Attributes$for = elm$html$Html$Attributes$stringProperty('htmlFor');
+var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
+var elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
+var elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
+	});
+var elm$html$Html$Events$targetValue = A2(
+	elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	elm$json$Json$Decode$string);
+var elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			elm$json$Json$Decode$map,
+			elm$html$Html$Events$alwaysStop,
+			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
+};
+var elm$html$Html$Events$alwaysPreventDefault = function (msg) {
+	return _Utils_Tuple2(msg, true);
+};
+var elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
+	return {$: 'MayPreventDefault', a: a};
+};
+var elm$html$Html$Events$preventDefaultOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
+	});
+var elm$html$Html$Events$onSubmit = function (msg) {
+	return A2(
+		elm$html$Html$Events$preventDefaultOn,
+		'submit',
+		A2(
+			elm$json$Json$Decode$map,
+			elm$html$Html$Events$alwaysPreventDefault,
+			elm$json$Json$Decode$succeed(msg)));
+};
+var author$project$Pages$Login$view = function (model) {
+	var trans = author$project$Services$I18n$get(model.translation);
+	return {
+		body: _List_fromArray(
+			[
+				A2(
+				elm$html$Html$form,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('form-signin'),
+						elm$html$Html$Events$onSubmit(author$project$Pages$Login$SubmittedForm),
+						elm$html$Html$Attributes$action('javascript:void(0);')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('text-center mb-4')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$img,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$alt(''),
+										elm$html$Html$Attributes$class('mb-4'),
+										A2(elm$html$Html$Attributes$attribute, 'height', '72'),
+										elm$html$Html$Attributes$src('/docs/4.3/assets/brand/bootstrap-solid.svg'),
+										A2(elm$html$Html$Attributes$attribute, 'width', '72')
+									]),
+								_List_Nil),
+								A2(
+								elm$html$Html$h1,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('h3 mb-3 font-weight-normal')
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text('Floating labels')
+									])),
+								A2(
+								elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										elm$html$Html$text('Build form controls with floating labels via the '),
+										A2(
+										elm$html$Html$code,
+										_List_Nil,
+										_List_fromArray(
+											[
+												elm$html$Html$text(':placeholder-shown')
+											])),
+										elm$html$Html$text('pseudo-element. '),
+										A2(
+										elm$html$Html$a,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$href('https://caniuse.com/#feat=css-placeholder-shown')
+											]),
+										_List_fromArray(
+											[
+												elm$html$Html$text('Works in latest Chrome, Safari, and Firefox.')
+											]))
+									]))
+							])),
+						A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('form-label-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$input,
+								_List_fromArray(
+									[
+										A2(elm$html$Html$Attributes$attribute, 'autofocus', ''),
+										elm$html$Html$Attributes$class('form-control'),
+										elm$html$Html$Attributes$id('inputEmail'),
+										elm$html$Html$Attributes$placeholder('Email address'),
+										A2(elm$html$Html$Attributes$attribute, 'required', ''),
+										elm$html$Html$Attributes$type_('email'),
+										elm$html$Html$Attributes$value(model.form.email),
+										elm$html$Html$Events$onInput(author$project$Pages$Login$EnteredEmail)
+									]),
+								_List_Nil),
+								A2(
+								elm$html$Html$label,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$for('inputEmail')
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text('Email address')
+									]))
+							])),
+						A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('form-label-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$input,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('form-control'),
+										elm$html$Html$Attributes$id('inputPassword'),
+										elm$html$Html$Attributes$placeholder('Password'),
+										A2(elm$html$Html$Attributes$attribute, 'required', ''),
+										elm$html$Html$Attributes$type_('password'),
+										elm$html$Html$Attributes$value(model.form.password),
+										elm$html$Html$Events$onInput(author$project$Pages$Login$EnteredPassword)
+									]),
+								_List_Nil),
+								A2(
+								elm$html$Html$label,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$for('inputPassword')
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text('Password')
+									]))
+							])),
+						A2(
+						elm$html$Html$button,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('btn btn-lg btn-primary btn-block'),
+								elm$html$Html$Attributes$type_('submit')
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text('Sign in')
+							]))
+					]))
+			]),
+		title: trans('LOGIN.TITLE')
+	};
+};
 var author$project$Pages$NotFound$Model = function (translation) {
 	return {translation: translation};
 };
@@ -11065,6 +11471,65 @@ var author$project$Pages$NotFound$view = function (model) {
 		title: trans('NOT.FOUND')
 	};
 };
+var author$project$Pages$SignUp$Model = function (translation) {
+	return {translation: translation};
+};
+var author$project$Pages$SignUp$view = function (model) {
+	var trans = author$project$Services$I18n$get(model.translation);
+	return {
+		body: _List_fromArray(
+			[
+				A2(
+				elm$html$Html$main_,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$id('content'),
+						elm$html$Html$Attributes$class('container page404'),
+						elm$html$Html$Attributes$tabindex(-1)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('row')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$h1,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('title')
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text(
+										trans('SIGNUP.TITLE'))
+									]))
+							])),
+						A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('row')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$div,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('image404')
+									]),
+								_List_Nil)
+							]))
+					]))
+			]),
+		title: trans('SIGNUP.TITLE')
+	};
+};
 var author$project$Main$view = function (model) {
 	var trans = author$project$Services$I18n$get(model.translation);
 	var _n0 = model.translation;
@@ -11077,9 +11542,9 @@ var author$project$Main$view = function (model) {
 			};
 		case 'TranslateSuccess':
 			var viewPage = function (pageview) {
-				var _n5 = pageview(model);
-				var title = _n5.title;
-				var content = _n5.content;
+				var _n7 = pageview(model);
+				var title = _n7.title;
+				var content = _n7.content;
 				return {
 					body: _List_fromArray(
 						[
@@ -11116,11 +11581,34 @@ var author$project$Main$view = function (model) {
 							body),
 						title: title
 					};
-				default:
-					var _n4 = author$project$Pages$NotFound$view(
-						author$project$Pages$NotFound$Model(model.translation));
+				case 'Login':
+					var _n4 = author$project$Pages$Login$view(model.login);
 					var title = _n4.title;
 					var body = _n4.body;
+					return {
+						body: A2(
+							elm$core$List$map,
+							elm$html$Html$map(author$project$Main$MsgLogin),
+							body),
+						title: title
+					};
+				case 'SignUp':
+					var _n5 = author$project$Pages$SignUp$view(
+						author$project$Pages$SignUp$Model(model.translation));
+					var title = _n5.title;
+					var body = _n5.body;
+					return {
+						body: A2(
+							elm$core$List$map,
+							elm$html$Html$map(author$project$Main$MsgSignUp),
+							body),
+						title: title
+					};
+				default:
+					var _n6 = author$project$Pages$NotFound$view(
+						author$project$Pages$NotFound$Model(model.translation));
+					var title = _n6.title;
+					var body = _n6.body;
 					return {
 						body: A2(
 							elm$core$List$map,
@@ -11162,7 +11650,7 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 						},
 						A2(elm$json$Json$Decode$field, 'host', elm$json$Json$Decode$string))));
 		},
-		A2(elm$json$Json$Decode$field, 'token', elm$json$Json$Decode$string)))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Types.Me":{"args":[],"type":"{ id : Basics.Int, username : String.String, email : String.String }"},"Types.Translation":{"args":[],"type":"Dict.Dict String.String String.String"},"Url.Url":{"args":[],"type":"{ protocol : Url.Protocol, host : String.String, port_ : Maybe.Maybe Basics.Int, path : String.String, query : Maybe.Maybe String.String, fragment : Maybe.Maybe String.String }"}},"unions":{"Main.Msg":{"args":[],"tags":{"LinkClicked":["Browser.UrlRequest"],"UrlChanged":["Url.Url"],"MsgNotFound":["Pages.NotFound.Msg"],"MsgGuest":["Pages.Guest.Msg"],"MsgDashboard":["Pages.Dashboard.Msg"],"HandleTranslateResponse":["Result.Result Http.Error Types.Translation"],"HandleCheckMeResponse":["Result.Result Http.Error Types.Me"],"Back":[],"Logout":[]}},"Pages.Dashboard.Msg":{"args":[],"tags":{"NoOp":[]}},"Pages.Guest.Msg":{"args":[],"tags":{"NoOp":[]}},"Pages.NotFound.Msg":{"args":[],"tags":{"NoOp":[]}},"Browser.UrlRequest":{"args":[],"tags":{"Internal":["Url.Url"],"External":["String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Url.Protocol":{"args":[],"tags":{"Http":[],"Https":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});
+		A2(elm$json$Json$Decode$field, 'token', elm$json$Json$Decode$string)))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Types.Me":{"args":[],"type":"{ id : Basics.Int, username : String.String, email : String.String }"},"Types.Translation":{"args":[],"type":"Dict.Dict String.String String.String"},"Url.Url":{"args":[],"type":"{ protocol : Url.Protocol, host : String.String, port_ : Maybe.Maybe Basics.Int, path : String.String, query : Maybe.Maybe String.String, fragment : Maybe.Maybe String.String }"},"Types.UserData":{"args":[],"type":"{ id : Basics.Int, username : String.String, email : String.String, token : String.String }"}},"unions":{"Main.Msg":{"args":[],"tags":{"LinkClicked":["Browser.UrlRequest"],"UrlChanged":["Url.Url"],"MsgNotFound":["Pages.NotFound.Msg"],"MsgGuest":["Pages.Guest.Msg"],"MsgDashboard":["Pages.Dashboard.Msg"],"MsgLogin":["Pages.Login.Msg"],"MsgSignUp":["Pages.SignUp.Msg"],"HandleTranslateResponse":["Result.Result Http.Error Types.Translation"],"HandleCheckMeResponse":["Result.Result Http.Error Types.Me"],"Back":[],"Logout":[]}},"Pages.Dashboard.Msg":{"args":[],"tags":{"NoOp":[]}},"Pages.Guest.Msg":{"args":[],"tags":{"NoOp":[]}},"Pages.Login.Msg":{"args":[],"tags":{"NoOp":[],"SubmittedForm":[],"EnteredEmail":["String.String"],"EnteredPassword":["String.String"],"HandleLoginResponse":["Result.Result Http.Error Types.UserData"]}},"Pages.NotFound.Msg":{"args":[],"tags":{"NoOp":[]}},"Pages.SignUp.Msg":{"args":[],"tags":{"NoOp":[]}},"Browser.UrlRequest":{"args":[],"tags":{"Internal":["Url.Url"],"External":["String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Url.Protocol":{"args":[],"tags":{"Http":[],"Https":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
@@ -11734,12 +12222,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // const flags = localStorage.getItem(storageKey);
 var token = localStorage.getItem("token") || "";
 
-_Main.Elm.Main.init({
+var app = _Main.Elm.Main.init({
   node: document.querySelector("main"),
   flags: {
     config: _config.default,
     token: token
   }
+});
+
+app.ports.localStorage.subscribe(function (data) {
+  Object.keys(data).forEach(function (key) {
+    return localStorage.setItem(key, data[key]);
+  });
 });
 },{"./Main.elm":"App/Main.elm","./config.js":"App/config.js"}],"../../../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -11769,7 +12263,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53131" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57636" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

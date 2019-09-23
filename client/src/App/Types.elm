@@ -7,6 +7,8 @@ import Html exposing (Html)
 
 type alias Me = { id : Int, username : String, email : String }
 
+type alias UserData = { id : Int, username : String, email : String, token: String }
+
 type alias InitialData = { token: String, config: Config }
 
 type alias Config = { host: String }

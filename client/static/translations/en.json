@@ -2,6 +2,8 @@
   "TEST": "this is test",
   "GUEST.TITLE": "Guest page",
   "DASHBOARD.TITLE": "Dashboard page",
+  "LOGIN.TITLE": "Login page",
+  "SIGNUP.TITLE": "SignUp page",
   "NOT.FOUND": "Page not found",
   "BACK.HOME": "Back to home",
   "BACK": "Back"

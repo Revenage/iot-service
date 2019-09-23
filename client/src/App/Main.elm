@@ -4,6 +4,8 @@ import Decoders exposing (..)
 import Pages.NotFound as NotFound
 import Pages.Guest as Guest
 import Pages.Dashboard as Dashboard
+import Pages.Login as Login
+import Pages.SignUp as SignUp
 import Router exposing (..)
 import Types exposing (..)
 import Task
@@ -26,6 +28,7 @@ type alias Model =
     , language : Language
     , translation : TranslateStatus
     , session: Session
+    , login: Login.Model
     }
 
 
@@ -35,6 +38,8 @@ type Msg
     | MsgNotFound NotFound.Msg
     | MsgGuest Guest.Msg
     | MsgDashboard Dashboard.Msg
+    | MsgLogin Login.Msg
+    | MsgSignUp SignUp.Msg
     | HandleTranslateResponse (Result Http.Error Translation)
     | HandleCheckMeResponse (Result Http.Error Me)
     | Back
@@ -58,13 +63,20 @@ init initialData url key =
     let
         route =
             toRoute url
+        translation = TranslateLoading
     in
     ( { key = key
       , url = url
       , route = route
       , language = English
-      , translation = TranslateLoading
+      , translation = translation
       , session = Unauthorised
+      , login = {
+          host = initialData.config.host
+          , key = key
+          , form = { email = "" , password = ""}
+          , translation = translation
+      }
       }
     , Cmd.batch [
           initialData |> checkMe 
@@ -119,6 +131,18 @@ update msg model =
             ( model
             , Cmd.none
             )
+        MsgLogin subN ->
+            let 
+                (newLoginModel, loginCmd) = Login.update subN model.login
+            in
+            ( {model | login = newLoginModel}  
+            , Cmd.map MsgLogin loginCmd
+            )
+
+        MsgSignUp _ ->
+            ( model
+            , Cmd.none
+            )
 
         LinkClicked urlRequest ->
             case urlRequest of
@@ -140,7 +164,16 @@ update msg model =
         HandleTranslateResponse result ->
             case result of
                 Ok translation ->
-                    ( { model | translation = TranslateSuccess translation }, Cmd.none )
+                    let 
+                        loginModel = model.login
+                    in
+                    ( { 
+                        model | translation = TranslateSuccess translation
+                        , login = {
+                                loginModel | translation = TranslateSuccess translation
+                            }
+                        }
+                         , Cmd.none )
 
                 Err _ ->
                     
@@ -173,14 +206,12 @@ update msg model =
             ( { model | session = Unauthorised, route = toPublicRoute model.route }, Cmd.none )
 
 
-
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
-
 
 
 --VIEW
@@ -225,6 +256,24 @@ view model =
                     in
                     { title = title
                     , body = List.map (Html.map MsgDashboard) body
+                    }
+
+                Login ->
+                    let
+                        { title, body } =
+                            Login.view (model.login)
+                    in
+                    { title = title
+                    , body = List.map (Html.map MsgLogin) body
+                    }
+
+                SignUp ->
+                    let
+                        { title, body } =
+                            SignUp.view (SignUp.Model model.translation)
+                    in
+                    { title = title
+                    , body = List.map (Html.map MsgSignUp) body
                     }
 
                 NotFound ->
@@ -289,41 +338,3 @@ footer model =
 
 loader =
     div [ class "loader" ] []
-             
-    --       Html.form [ class "form-signin" ]
-    -- [ div [ class "text-center mb-4" ]
-    --     [ img [ alt "", class "mb-4", attribute "height" "72", src "/docs/4.3/assets/brand/bootstrap-solid.svg", attribute "width" "72" ]
-    --         []
-    --     , h1 [ class "h3 mb-3 font-weight-normal" ]
-    --         [ text "Floating labels" ]
-    --     , p []
-    --         [ text "Build form controls with floating labels via the "
-    --         , code []
-    --             [ text ":placeholder-shown" ]
-    --         , text "pseudo-element. "
-    --         , a [ href "https://caniuse.com/#feat=css-placeholder-shown" ]
-    --             [ text "Works in latest Chrome, Safari, and Firefox." ]
-    --         ]
-    --     ]
-    -- , div [ class "form-label-group" ]
-    --     [ input [ attribute "autofocus" "", class "form-control", id "inputEmail", placeholder "Email address", attribute "required" "", type_ "email" ]
-    --         []
-    --     , label [ for "inputEmail" ]
-    --         [ text "Email address" ]
-    --     ]
-    -- , div [ class "form-label-group" ]
-    --     [ input [ class "form-control", id "inputPassword", placeholder "Password", attribute "required" "", type_ "password" ]
-    --         []
-    --     , label [ for "inputPassword" ]
-    --         [ text "Password" ]
-    --     ]
-    -- -- , div [ class "checkbox mb-3" ]
-    -- --     [ label []
-    -- --         [ input [ type_ "checkbox", value "remember-me" ]
-    -- --             []
-    -- --         , text "Remember me"
-    -- --         ]
-    -- --     ]
-    -- , button [ class "btn btn-lg btn-primary btn-block", type_ "submit" ]
-    --     [ text "Sign in" ]
-    -- ]

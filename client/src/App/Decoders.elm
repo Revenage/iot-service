@@ -1,4 +1,4 @@
-module Decoders exposing (decodeTranslations, decodeMe, decodeConfig, decodeInitialData)
+module Decoders exposing (decodeTranslations, decodeMe, decodeConfig, decodeInitialData, decodeLoginResponse)
 
 import Types exposing (..)
 import Json.Decode exposing (..)
@@ -15,6 +15,14 @@ decodeMe =
     (field "username" string)
     (field "email" string)
 
+decodeLoginResponse : Decoder UserData
+decodeLoginResponse =
+    map4 UserData
+            (field "id" int)
+            (field "username" string)
+            (field "email" string)
+            (field "token" string)
+
 decodeConfig : Decoder Config
 decodeConfig =
     map Config
@@ -23,8 +31,6 @@ decodeConfig =
 decodeInitialData : Decoder InitialData
 decodeInitialData =
     map2 InitialData
-            (field "token" (nullable string))
+            (field "token" string)
             (field "config" decodeConfig)
-            
-
                     
