@@ -1,16 +1,16 @@
 const Device = require("./dal");
-// const subscribeJWTToken = require("helpers/auth/subscribeJWTToken");
+const subscribeJWTToken = require("helpers/auth/subscribeJWTToken");
 
 module.exports = {
   create: async function({ uid, email, password }) {
     try {
       const device = await Device.create({ uid, email, password });
       if (device) {
-        // const token = subscribeJWTToken(user.id);
+        const token = subscribeJWTToken(uid);
         const { password, ...userWithoutPassword } = device;
         return {
-          ...userWithoutPassword
-          // token
+          ...userWithoutPassword,
+          token
         };
       }
 
@@ -27,9 +27,9 @@ module.exports = {
       throw error;
     }
   },
-  updateById: async function name({ body, id }) {
+  updateById: async function name({ body, uid }) {
     try {
-      const device = Device.updateById({ body, id });
+      const device = Device.updateById({ body, uid });
       return device;
     } catch (error) {
       throw error;

@@ -6,6 +6,19 @@
 
 #include "EEPROM.h"
 
+// #define pin_SW_SDA 5 // Назначаем вывод D3 Arduino для работы в качестве линии SDA программной шины I2C.
+// #define pin_SW_SCL 4
+
+#include <Wire.h>
+#include <iarduino_RTC.h>
+
+uint8_t wire1 = D8;
+uint8_t wire2 = D7;
+uint8_t wire3 = D6;
+uint8_t wire4 = D5;
+
+iarduino_RTC timeRTC(RTC_DS1307);
+
 const byte DNS_PORT = 53;
 IPAddress apIP(172, 217, 28, 1);
 DNSServer dnsServer;
@@ -20,11 +33,12 @@ uint8_t LEDpin = 2;
 String wifiSSID = "";
 String wifiPASSWORD = "";
 String wifiMAC = "";
+String wifiTOKEN = "";
 
 void writeString(char add, String data);
 String read_String(char add);
 
-const String host = "http://192.168.0.102:3000";
+const String host = "http://192.168.0.104:3000";
 //const String host = "http://iot-smart-house.herokuapp.com";
 
 String Page(String title, String content)
@@ -114,12 +128,22 @@ String FailConnection()
 void setup()
 {
   delay(1000);
+
+  pinMode(wire1, OUTPUT);
+  pinMode(wire2, OUTPUT);
+  pinMode(wire3, OUTPUT);
+  pinMode(wire4, OUTPUT);
+
   Serial.begin(115200);
-  EEPROM.begin(128);
+  Wire.begin(4, 5);
+  timeRTC.begin();
+  EEPROM.begin(256);
+
   WiFi.mode(WIFI_OFF);
   pinMode(LEDpin, OUTPUT);
 
   Serial.setDebugOutput(true);
+
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP(ssid, password);
@@ -146,6 +170,51 @@ void setup()
   Serial.println("HTTP server started");
 }
 
+// STEPPER
+void sequence(bool a, bool b, bool c, bool d)
+{ /* four step sequence to stepper motor */
+  digitalWrite(wire1, a);
+  digitalWrite(wire2, b);
+  digitalWrite(wire3, c);
+  digitalWrite(wire4, d);
+  delay(1);
+  // delayMicroseconds(50);
+}
+
+void rotate(int percent)
+{
+  for (int i = 0; i < (524 * percent / 100); i++)
+  {
+    sequence(HIGH, LOW, LOW, LOW);
+    sequence(HIGH, HIGH, LOW, LOW);
+    sequence(LOW, HIGH, LOW, LOW);
+    sequence(LOW, HIGH, HIGH, LOW);
+    sequence(LOW, LOW, HIGH, LOW);
+    sequence(LOW, LOW, HIGH, HIGH);
+    sequence(LOW, LOW, LOW, HIGH);
+    sequence(HIGH, LOW, LOW, HIGH);
+  }
+  sequence(LOW, LOW, LOW, LOW);
+}
+
+void rotateBack(int percent)
+{
+  for (int i = 0; i < (524 * percent / 100); i++)
+  {
+    sequence(LOW, LOW, LOW, HIGH);
+    sequence(LOW, LOW, HIGH, HIGH);
+    sequence(LOW, LOW, HIGH, LOW);
+    sequence(LOW, HIGH, HIGH, LOW);
+    sequence(LOW, HIGH, LOW, LOW);
+    sequence(HIGH, HIGH, LOW, LOW);
+    sequence(HIGH, LOW, LOW, LOW);
+    sequence(HIGH, LOW, LOW, HIGH);
+  }
+  sequence(LOW, LOW, LOW, LOW);
+}
+
+//SERVER
+
 void handleNotFound()
 {
   Serial.print("URI Not Found: ");
@@ -155,12 +224,9 @@ void handleNotFound()
 
 void handle_root()
 {
-  // unsigned int len = wifiSSID.length();
-  // if (len == 0) {
   Serial.print("Page served: ");
   Serial.println(server.uri());
   server.send(200, "text/html", ConnectionListWiFiPage());
-  // }
 }
 
 void handle_conection()
@@ -183,7 +249,7 @@ void wifi_connection()
   Serial.print("Wifi password: ");
   Serial.println(wifiPASSWORD);
 
-  delay(1000);
+  delay(500);
 
   WiFi.begin(wifiSSID, wifiPASSWORD); //Connect to your WiFi router
   Serial.println("");
@@ -213,25 +279,27 @@ void wifi_connection()
   Serial.println(wifiSSID);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
-  saveCredentials();
 }
 
 void handle_connection_to_account()
 {
   HTTPClient http;
 
-  String email = server.arg("email");
-  String password = server.arg("password");
+  String emailArg = server.arg("email");
+  String passwordArg = server.arg("password");
 
+  Serial.print("postData email: ");
+  Serial.println(emailArg);
   Serial.print("postData password: ");
-  Serial.println(password);
+  Serial.println(passwordArg);
+  Serial.print("postData wifiMAC: ");
+  Serial.println(wifiMAC);
 
-  const int capacity = JSON_OBJECT_SIZE(3);
+  // const int capacity = JSON_OBJECT_SIZE(3);
   String postData = "";
-  StaticJsonDocument<capacity> postDataDoc;
-  postDataDoc["email"] = email;
-  postDataDoc["password"] = password;
+  StaticJsonDocument<200> postDataDoc;
+  postDataDoc["email"] = emailArg;
+  postDataDoc["password"] = passwordArg;
   postDataDoc["uid"] = wifiMAC;
 
   serializeJson(postDataDoc, postData);
@@ -240,7 +308,7 @@ void handle_connection_to_account()
   Serial.print("postData: ");
   Serial.println(postData);
 
-  http.begin(host + "/api/devices/" + wifiMAC);       //Specify request destination
+  http.begin(host + "/api/devices/auth/register");    //Specify request destination
   http.addHeader("Content-Type", "application/json"); //Specify content-type header
 
   int httpCode = http.POST(postData); //Send the request
@@ -250,8 +318,8 @@ void handle_connection_to_account()
   Serial.println(respond);  //Print request response payload
   http.end();
 
-  const int cap = JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(1);
-  StaticJsonDocument<cap> respondDoc;
+  // const int cap = JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(1);
+  StaticJsonDocument<400> respondDoc;
 
   DeserializationError err = deserializeJson(respondDoc, respond);
   if (err)
@@ -262,6 +330,16 @@ void handle_connection_to_account()
 
   auto resStatus = respondDoc["status"].as<String>();
   auto resMessage = respondDoc["message"].as<String>();
+  auto token = respondDoc["token"].as<String>();
+
+  Serial.print("write token:");
+  Serial.println(token);
+
+  if (token)
+  {
+    saveCredentials();
+    writeString(64, token);
+  }
 
   if (httpCode >= 200 && httpCode < 300)
   {
@@ -288,7 +366,7 @@ void writeString(char add, String data)
 String read_String(char add)
 {
   int i;
-  char data[100]; //Max 100 Bytes
+  char data[200]; //Max 100 Bytes
   int len = 0;
   unsigned char k;
   k = EEPROM.read(add);
@@ -317,15 +395,26 @@ void saveCredentials()
 String loadSSID()
 {
   String SSID = read_String(0);
-  Serial.println(wifiSSID);
+  Serial.print('loadSSID: ');
+  Serial.println(SSID);
   return SSID;
 }
 
 String loadPASSWORD()
 {
   String PASSWORD = read_String(32);
-  Serial.println(wifiPASSWORD);
+  Serial.print('loadPASSWORD: ');
+  Serial.println(PASSWORD);
   return PASSWORD;
+}
+
+String loadTOKEN()
+{
+  String token = read_String(64);
+
+  Serial.print('loadTOKEN: ');
+  Serial.println(token);
+  return token;
 }
 
 void ledProcess()
@@ -348,29 +437,94 @@ void blink()
   digitalWrite(LEDpin, HIGH);
 }
 
+void respondProcess(JsonDocument doc)
+{
+  auto action = doc["action"].as<String>();
+
+  if (action == "led")
+  {
+    bool value = doc["value"];
+    LEDstate = value;
+    return;
+  }
+
+  if (action == "rotate")
+  {
+    int value = doc["value"];
+    if (value > 0)
+    {
+      blink();
+      rotate(value);
+    }
+    else
+    {
+      blink();
+      blink();
+      rotateBack(abs(value));
+    }
+    return;
+  }
+
+  if (action == "setTime")
+  {
+    JsonArray value = doc["value"];
+    int sec = value[0];
+    int min = value[1];
+    int hour = value[2];
+    int day = value[3];
+    int month = value[4];
+    int year = value[5];
+    int dayNum = value[6]; // 2 - tuesday
+    timeRTC.settime(sec, min, hour, day, month, year, dayNum);
+
+    return;
+  }
+
+  Serial.print('Unknown action: ');
+  Serial.println(action);
+}
+
 void mainProcess()
 {
 
   if (WiFi.status() == WL_CONNECTED)
   {
-    Serial.print("main connected: ");
-    Serial.println(host + "/poll/connect/" + wifiMAC);
     HTTPClient http;
-    http.setTimeout(60000);
-    http.begin(host + "/poll/connect/" + wifiMAC); //Specify request destination
+    http.setTimeout(30000);
+    http.begin(host + "/poll/subscribe/" + wifiMAC); //Specify request destination
 
+    String token = loadTOKEN();
+
+    if (token.length() <= 64 || token == "null")
+    {
+      delay(1000);
+      return;
+    }
+
+    http.addHeader("Authorization", "Bearer " + token);
     int httpCode = http.GET(); //Send the request
 
+    Serial.print("httpCode: ");
     Serial.println(httpCode);
+
+    Serial.print("token: ");
+    Serial.println(token);
     if (httpCode > 0)
     { //Check the returning code
+
+      if (httpCode > 400)
+      { // Unathorized
+        delay(1000);
+        blink();
+        return;
+      }
 
       String payload = http.getString(); //Get the request response payload
       Serial.print("poll payload: ");
       Serial.println(payload); //Print the response payload
 
       // PROCESS ACTIONS
-      const int cap = JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(1);
+      const int cap = JSON_ARRAY_SIZE(7) + JSON_OBJECT_SIZE(3) + 400;
       StaticJsonDocument<cap> respondDoc;
 
       DeserializationError err = deserializeJson(respondDoc, payload);
@@ -382,11 +536,13 @@ void mainProcess()
 
       auto status = respondDoc["status"].as<String>();
 
-      auto led = respondDoc["led"].as<boolean>();
-      LEDstate = led;
-
       Serial.print("poll status: ");
       Serial.println(status); //Print the response payload
+
+      if (status == "ok")
+      {
+        respondProcess(respondDoc);
+      }
     }
     else
     {
@@ -395,13 +551,15 @@ void mainProcess()
         delay(1000);
       }
     }
+
     http.end(); //Close connection
   }
   else
   {
     String ssid = loadSSID();
     String password = loadPASSWORD();
-    if (ssid.length() > 0 && password.length() > 0)
+
+    if (ssid && password)
     {
       WiFi.begin(ssid, password); //Connect to your WiFi router
       Serial.println("Connecting");
@@ -421,8 +579,9 @@ void mainProcess()
       blink();
       blink();
       Serial.println("");
-      Serial.print("Connected to ");
-      Serial.println(ssid);
+      Serial.print("Connected to: ");
+      Serial.print(ssid);
+      Serial.print(", password: ");
       Serial.println(password);
       Serial.print("IP address: ");
       Serial.println(WiFi.localIP());
@@ -436,6 +595,9 @@ void loop()
   server.handleClient();
 
   mainProcess();
+
+  Serial.println(timeRTC.gettime("H:i:s"));
+  delay(1000);
 
   ledProcess();
 }

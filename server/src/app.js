@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.use(HttpLoggerMiddleware);
 
 app.use("/api", JWTMiddleware(), ApiRoutes);
-app.use("/poll", /*JWTMiddleware(),*/ PollRoutes);
+app.use("/poll", JWTMiddleware(), PollRoutes);
 
 app.use(ErrorMiddleware);
 

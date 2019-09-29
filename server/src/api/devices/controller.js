@@ -14,6 +14,7 @@ module.exports = {
     try {
       const { body } = req;
       const { email, password } = body;
+      console.log("%j", "register", body);
       const user = await getByEmail(email);
       const { password: userPassword } = user;
       if (user) {
@@ -23,6 +24,7 @@ module.exports = {
             if (device) {
               try {
                 user.addDevice(device.uid);
+                console.log("%j", "addDevice", device);
                 return res.json(device);
               } catch (error) {
                 next(error);
@@ -75,9 +77,9 @@ module.exports = {
     try {
       const {
         body,
-        params: { id }
+        params: { uid }
       } = req;
-      const device = await updateById({ body, id });
+      const device = await updateById({ body, uid });
       return res.json(device);
     } catch (error) {
       next(error);
@@ -85,7 +87,7 @@ module.exports = {
   },
   deleteDevice: async function(req, res, next) {
     try {
-      const device = await deleteById(device);
+      const device = await deleteById(req);
       return res.json(device);
     } catch (error) {
       next(error);
