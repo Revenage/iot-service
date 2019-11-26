@@ -9,6 +9,8 @@ const { port } = require("../src/config");
 app.set("port", port);
 const server = http.createServer(app);
 
+// const mqttBroker = require("../src/mqttBroker");
+
 models.sequelize
   // .sync({ force: true })
   .sync()

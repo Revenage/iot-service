@@ -1,17 +1,32 @@
-module Types exposing (..)
+module Types exposing (Translation, Me, UserData, Config, InitialData, Language(..), TranslateStatus(..), Session(..))
 
-import Browser
-import Browser.Navigation as Nav
+-- import Browser
+-- import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Html exposing (Html)
+-- import Html exposing (Html)
 
-type alias Me = { id : Int, username : String, email : String }
+type alias Me = { 
+    id : Int,
+    username : String,
+    email : String
+    }
 
-type alias UserData = { id : Int, username : String, email : String, token: String }
+type alias UserData = { 
+    id : Int,
+    username : String,
+    email : String,
+    token: String
+    }
 
-type alias InitialData = { token: String, config: Config }
+type alias InitialData = { 
+    token: String,
+    config: Config
+    }
 
-type alias Config = { host: String }
+type alias Config = { 
+    host: String,
+    defaultLanguage: String
+    }
 
 type TranslateStatus
     = TranslateFailure

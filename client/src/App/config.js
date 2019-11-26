@@ -1,9 +1,11 @@
 const config = {
   development: {
-    host: "http://localhost:3000"
+    host: "http://localhost:3000",
+    defaultLanguage: "en"
   },
   production: {
-    host: "/"
+    host: "/",
+    defaultLanguage: "en"
   }
 };
 

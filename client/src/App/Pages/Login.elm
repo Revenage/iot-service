@@ -1,4 +1,4 @@
-port module Pages.Login exposing (Model, Msg(..), init, subscriptions, update, view)
+port module Pages.Login exposing (Model, Msg(..), init, subscriptions, update, view, login)
 
 -- import Helpers.AssetsUrl exposing (assetsUrl)
 
@@ -73,7 +73,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SubmittedForm ->
-            let adsf = Debug.log "form" model.form in
+            -- let adsf = Debug.log "form" model.form in
             ( model
             , Http.post
                     { url = crossOrigin model.host ["api","users","auth", "login"] []

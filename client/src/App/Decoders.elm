@@ -25,8 +25,9 @@ decodeLoginResponse =
 
 decodeConfig : Decoder Config
 decodeConfig =
-    map Config
+    map2 Config
         (field "host" string)
+        (field "defaultLanguage" string)
 
 decodeInitialData : Decoder InitialData
 decodeInitialData =

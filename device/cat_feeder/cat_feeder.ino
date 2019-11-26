@@ -38,7 +38,7 @@ String wifiTOKEN = "";
 void writeString(char add, String data);
 String read_String(char add);
 
-const String host = "http://192.168.0.104:3000";
+const String host = "http://192.168.0.105:3000";
 //const String host = "http://iot-smart-house.herokuapp.com";
 
 String Page(String title, String content)

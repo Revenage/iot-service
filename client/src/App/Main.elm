@@ -181,7 +181,7 @@ update msg model =
 
         HandleCheckMeResponse result ->
             case result of
-                Ok user ->
+                Ok _ ->
                     ( { model | session = LoggedIn }, Cmd.none )
 
                 Err _ ->

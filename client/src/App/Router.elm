@@ -5,13 +5,13 @@ module Router exposing (Route(..), route, toRoute, toPublicRoute)
 -- import Page.Settings as Settings
 -- import Page.NotFound as NotFound
 
-import Browser
-import Browser.Navigation as Nav
-import Html exposing (..)
-import Html.Attributes exposing (..)
+-- import Browser
+-- import Browser.Navigation as Nav
+-- import Html exposing (..)
+-- import Html.Attributes exposing (..)
 import Url
-import Url.Parser exposing ((</>), Parser, map, oneOf, parse, s, string, top)
-import Types exposing (..)
+import Url.Parser exposing (Parser, map, oneOf, parse, s, top)
+-- import Types exposing (..)
 
 
 
@@ -26,11 +26,11 @@ type Route
 route : Parser (Route -> a) a
 route =
     oneOf
-        [ map Dashboard top
-        , map Guest top
-        , map Login (s "login")
-        , map SignUp (s "signup")
-        , map NotFound (s "404")
+        [ Url.Parser.map Dashboard top
+        , Url.Parser.map Guest top
+        , Url.Parser.map Login (Url.Parser.s "login")
+        , Url.Parser.map SignUp (Url.Parser.s "signup")
+        , Url.Parser.map NotFound (Url.Parser.s "404")
         ]
 
 

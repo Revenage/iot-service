@@ -4,3 +4,4 @@ client/.cache
 client/.parcel-cache
 client/node_modules/
 client/elm-stuff/
+dump.rdb
