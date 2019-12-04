@@ -119,19 +119,24 @@ void handleRoot()
 
     String Page;
     Page += F(
-        "<html><head></head><body>"
-        "<h1>HELLO WORLD!!</h1>");
+        "<html>"
+        "<title>NightLighter</title>"
+        "<meta charset=\"UTF-8\" />"
+		"<meta name=\"viewport\" content=\"width=device-width, user-scalable=no\">"
+		"<style>*{box-sizing:border-box}body{font-family:sans-serif,arial;color:lightgray;background-size:cover;height:100vh;font-size:16px;background:#2f414d;height:100vh;font-size:16px;display:flex;align-items:center;justify-content:center}h1{text-align:center}p{text-align:center;padding:15px 0}a{text-decoration:none;color:lightgray}.button{display:inline-block;padding:15px;border:1px solid #fff;text-align:center;background:#006400}"
+		"</style><body><main><h1>NightLighter</h1>"
+        );
     if (server.client().localIP() == apIP)
     {
-        Page += String(F("<p>You are connected through the soft AP: ")) + softAP_ssid + F("</p>");
+        Page += String(F("<p>You are not connected to the internet</p>"));
+        Page += F("<p><a class=\"button\" href=\"/wifi\">Connect to your WIFI</a></p>");
     }
     else
     {
         Page += String(F("<p>You are connected through the wifi network: ")) + ssid + F("</p>");
+        Page += F("<p><a class=\"button\" href=\"/wifi\">Change your WIFI connection</a></p>");
     }
-    Page += F(
-        "<p>You may want to <a href='/wifi'>config the wifi connection</a>.</p>"
-        "</body></html>");
+        Page += F("</body></html>");
 
     server.send(200, "text/html", Page);
 }
@@ -159,27 +164,30 @@ void handleWifi()
 
     String Page;
     Page += F(
-        "<html><head></head><body>"
-        "<h1>Wifi config</h1>");
-    if (server.client().localIP() == apIP)
-    {
-        Page += String(F("<p>You are connected through the soft AP: ")) + softAP_ssid + F("</p>");
-    }
-    else
-    {
-        Page += String(F("<p>You are connected through the wifi network: ")) + ssid + F("</p>");
-    }
+        "<html><head><title>NightLighter</title>"
+    "<meta charset=\"UTF-8\" />"
+    "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no\" />"
+    "<style>*{box-sizing:border-box}body{font-family:sans-serif,arial;color:lightgray;background-size:cover;height:100vh;font-size:16px;background:#2f414d;height:100vh;font-size:16px;display:flex;align-items:center;justify-content:center}h1{text-align:center}p{text-align:center;padding:15px 0}a{text-decoration:none;color:lightgray}.button{display:inline-block;padding:15px;border:1px solid #fff;border-radius:0;text-align:center;background:#006400;min-width:120px;color:lightgray;font-size:16px;-webkit-appearance:none;-webkit-border-radius:0}select{min-width:120px;min-height:25px;outline:none;-webkit-appearance:none;-webkit-border-radius:0;color:gray;font-size:16px;padding-left:7px;width:120px;background:#fff}.p{padding:15px 0}.form-group{position:relative;margin:0 auto;width:120px}.form-group input{min-width:120px;min-height:25px;outline:none;width:120px;color:gray;-webkit-appearance:none;-webkit-border-radius:0}.form-control-placeholder{position:absolute;top:0;padding:7px 0 3px 7px;transition:all 200ms;left:0;color:gray}.form-control:focus + .form-control-placeholder,.form-control:valid + .form-control-placeholder{font-size:75%;transform:translate3d(0,-100%,0)}</style>"
+    "</head><body><main><h1>Wifi config</h1>");
+    // if (server.client().localIP() == apIP)
+    // {
+    //     Page += String(F("<p>You are connected through the soft AP: ")) + softAP_ssid + F("</p>");
+    // }
+    // else
+    // {
+    //     Page += String(F("<p>You are connected through the wifi network: ")) + ssid + F("</p>");
+    // }
     Serial.println("scan start");
     int n = WiFi.scanNetworks();
     Serial.println("scan done");
     
-    Page += F("\r\n<br /><form method='POST' action='wifisave'><h4>Connect to network:</h4>");
+    Page += F("<form method='POST' action='wifisave'>");
     if (n > 0)
     {
-        Page += F("\r\n<p><select name=\"n\"><option disabled>Choose your WIFI</option>");
+        Page += F("<p><select name=\"n\"><option disabled>Choose your WIFI</option>");
         for (int i = 0; i < n; i++)
         {
-            Page += String(F("\r\n<option value=")) + WiFi.SSID(i) + F(" selected>") + WiFi.SSID(i) + F("</option>");
+            Page += String(F("<option value=")) + WiFi.SSID(i) + F("\" ") + (WiFi.SSID(i) == ssid ? F("selected>") : F(">")) + WiFi.SSID(i) + F("</option>");
         }
         Page += F("</select></p>");
     }
@@ -188,10 +196,12 @@ void handleWifi()
         Page += F("<p>No WIFI found</p>");
     }
     Page += F(
-        "<br /><input type='password' placeholder='password' name='p'/>"
-        "<br /><input type='submit' value='Connect/Disconnect'/></form>"
-        "<p>You may want to <a href='/'>return to the home page</a>.</p>"
-        "</body></html>");
+        "<div class=\"p\"><div class=\"form-group\">"
+		"<input type=\"password\" name=\"p\" id=\"password\" class=\"form-control\" required>"
+		"<label class=\"form-control-placeholder\" for=\"password\">Password</label>"
+		"</div></div>"
+        "<p><input class=\"button\" type=\"submit\" value=\"Connect\" /></p>"
+        "</form></main></body></html>");
     server.send(200, "text/html", Page);
     server.client().stop(); // Stop is needed because we sent no content length
 }

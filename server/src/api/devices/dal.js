@@ -40,6 +40,9 @@ module.exports = {
           }
         ]
       });
+      if (!deviceData) {
+        throw `Undefined device ${uid}`;
+      }
       const device = deviceData.get({ plain: true });
       return omitSensetive(device);
     } catch (error) {

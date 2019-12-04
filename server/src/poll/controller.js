@@ -63,7 +63,6 @@ module.exports = {
       params: { id },
       user: { id: userId }
     } = req;
-    console.log("publish to", id, userId);
 
     try {
       const device = await getById(id);
@@ -75,14 +74,14 @@ module.exports = {
         if (subscribers.has(id)) {
           const pollRes = subscribers.get(id);
           await pollRes(req.body);
-          await waitTimes(1000, async () => {
-            await delay(100);
-            const d = subscribers.has(id);
-            if (!subscribers.has(id)) {
-              throw "not device";
-            }
-            return d;
-          });
+          // await waitTimes(1000, async () => {
+          //   await delay(100);
+          //   const d = subscribers.has(id);
+          //   if (!subscribers.has(id)) {
+          //     throw "not device";
+          //   }
+          //   return d;
+          // });
 
           await res.json({ status: "ok" });
         } else {
@@ -92,6 +91,7 @@ module.exports = {
         throw `Device ${id} is not registred`;
       }
     } catch (error) {
+      console.log("error", error);
       res.status(404).send({ error });
     }
   },

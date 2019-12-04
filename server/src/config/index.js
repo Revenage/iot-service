@@ -2,7 +2,7 @@ const config = {
   development: {
     secret: "qwerqwerqwerqwer",
     port: 3000,
-    timeout: 30000
+    timeout: 29000
   },
   production: {
     secret: "qwerqwerqwerqwer",
